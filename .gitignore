@@ -1,0 +1,17 @@
+# app della dieta originale: ha il suo repository
+Diet1/
+
+.DS_Store
+# generato da xcodegen (project.yml)
+*.xcodeproj/
+xcuserdata/
+DerivedData/
+build/
+__pycache__/
+
+# Android
+.gradle/
+local.properties
+*.iml
+.idea/
+.kotlin/

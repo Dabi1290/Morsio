@@ -1,0 +1,67 @@
+name: CalSnap
+options:
+  deploymentTarget:
+    iOS: "26.0"
+settings:
+  base:
+    DEVELOPMENT_TEAM: CMW9JLGZN3
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  CalSnap:
+    type: application
+    platform: iOS
+    sources: [CalSnap, Shared]
+    info:
+      path: CalSnap/Info.plist
+      properties:
+        CFBundleDisplayName: Morsio
+        NSCameraUsageDescription: Serve per fotografare i pasti e leggere i codici a barre.
+        NSLocalNetworkUsageDescription: Serve per inviare le foto al tuo server in rete locale.
+        UILaunchScreen: {}
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        CFBundleURLTypes:
+          - CFBundleURLSchemes: [calsnap]
+    entitlements:
+      path: CalSnap/CalSnap.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.dlab.calsnap]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dlab.calsnap
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    dependencies:
+      - target: CalSnapWidget
+    scheme:
+      testTargets: [CalSnapTests]
+  CalSnapWidget:
+    type: app-extension
+    platform: iOS
+    sources: [CalSnapWidget, Shared]
+    info:
+      path: CalSnapWidget/Info.plist
+      properties:
+        CFBundleDisplayName: Morsio
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: CalSnapWidget/CalSnapWidget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.dlab.calsnap]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dlab.calsnap.widget
+  CalSnapTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [CalSnapTests]
+    dependencies:
+      - target: CalSnap
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.dlab.calsnap.tests
