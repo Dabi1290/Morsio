@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Morsio</string>
+    <string name="widget_description">Kcal e macro di oggi. Tocca per aggiungere un pasto.</string>
+</resources>
