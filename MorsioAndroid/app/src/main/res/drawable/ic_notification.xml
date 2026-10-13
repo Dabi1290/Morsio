@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- l'anello delle calorie del logo, a una tinta -->
+<!-- sagoma del logo per la barra di stato: piatto col morso, anello ritagliato (Android la colora da sé) -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp" android:height="24dp"
-    android:viewportWidth="24" android:viewportHeight="24">
-    <path android:pathData="M12,4.5 A7.5,7.5 0 1,1 4.5,12"
-        android:strokeColor="#FFFFFFFF" android:strokeWidth="3" android:strokeLineCap="round" />
+    android:viewportWidth="72" android:viewportHeight="72">
+    <group android:translateX="-14" android:translateY="-14">
+        <path android:fillType="evenOdd" android:fillColor="#FFFFFFFF"
+            android:pathData="M59.03,19.30A7,7 0 0,0 64.08,26.73A10,10 0 0,0 74.00,38.00A7,7 0 0,0 81.60,44.97A32,32 0 1,1 59.03,19.30ZM50.00,30.00A20,20 0 1,1 30.00,50.00A3,3 0 0,1 36.00,50.00A14,14 0 1,0 50.00,36.00A3,3 0 0,1 50.00,30.00Z" />
+    </group>
 </vector>

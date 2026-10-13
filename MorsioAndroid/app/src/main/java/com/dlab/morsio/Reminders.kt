@@ -59,6 +59,7 @@ object Reminders {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val notification = NotificationCompat.Builder(context, CHANNEL)
             .setSmallIcon(R.drawable.ic_notification)
+            .setColor(0xFF21BD8F.toInt())  // il verde dell'app per icona e nome nella notifica
             .setContentTitle(slot)
             .setContentText("Hai mangiato? Aggiungi il pasto a Morsio.")
             .setContentIntent(open)
