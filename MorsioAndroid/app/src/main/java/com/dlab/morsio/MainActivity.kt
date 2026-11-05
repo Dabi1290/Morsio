@@ -52,6 +52,7 @@ class MainActivity : ComponentActivity() {
     private val theme = mutableStateOf("system")
     private var overlay by mutableStateOf<Overlay?>(null)
     private var tab by mutableStateOf(0)
+    private var day by mutableStateOf(java.time.LocalDate.now())  // giorno aperto nel diario: lì finisce il pasto nuovo
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,7 +99,7 @@ class MainActivity : ComponentActivity() {
                 },
                 floatingActionButton = {
                     ExtendedFloatingActionButton(
-                        onClick = { overlay = Overlay.Edit(null) },
+                        onClick = { overlay = Overlay.Edit(Meal(name = "", time = mealTime(day))) },
                         icon = { Icon(Icons.Rounded.CameraAlt, null) },
                         text = { Text("Aggiungi pasto", fontWeight = FontWeight.SemiBold) },
                         containerColor = Palette.accent,
@@ -107,7 +108,7 @@ class MainActivity : ComponentActivity() {
                 },
             ) { padding ->
                 AnimatedContent(tab, label = "tab") { t ->
-                    if (t == 0) DiaryScreen(padding, onEdit = { overlay = Overlay.Edit(it) }, onSettings = { overlay = Overlay.Settings })
+                    if (t == 0) DiaryScreen(padding, day, { day = it }, onEdit = { overlay = Overlay.Edit(it) }, onSettings = { overlay = Overlay.Settings })
                     else PlanScreen(padding)
                 }
             }

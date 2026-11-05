@@ -57,7 +57,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -102,12 +101,10 @@ fun dayTitle(day: LocalDate): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DiaryScreen(padding: PaddingValues, onEdit: (Meal) -> Unit, onSettings: () -> Unit) {
+fun DiaryScreen(padding: PaddingValues, day: LocalDate, onDay: (LocalDate) -> Unit, onEdit: (Meal) -> Unit, onSettings: () -> Unit) {
     val store = LocalContext.current.store
     val meals by store.meals.collectAsState()
     val plan by store.plan.collectAsState()
-    var dayEpoch by rememberSaveable { mutableStateOf(LocalDate.now().toEpochDay()) }
-    val day = LocalDate.ofEpochDay(dayEpoch)
     var showCalendar by remember { mutableStateOf(false) }
     val dayMeals = meals.on(day).sortedBy { it.time }
     val planDay = plan?.day(day)
@@ -125,7 +122,7 @@ fun DiaryScreen(padding: PaddingValues, onEdit: (Meal) -> Unit, onSettings: () -
                 FilledTonalIconButton(onSettings, colors = buttonColors) { Icon(Icons.Rounded.Settings, "Impostazioni") }
             }
         }
-        item { DayStrip(day, meals, store.storage.goal) { dayEpoch = it.toEpochDay() } }
+        item { DayStrip(day, meals, store.storage.goal) { onDay(it) } }
         item { SummaryCard(dayMeals, store.storage.goal, store.adherence(day)) }
         for (slot in Slot.all) {
             val slotMeals = dayMeals.filter { it.resolvedSlot == slot }
@@ -171,7 +168,7 @@ fun DiaryScreen(padding: PaddingValues, onEdit: (Meal) -> Unit, onSettings: () -
             onDismissRequest = { showCalendar = false },
             confirmButton = {
                 TextButton({
-                    state.selectedDateMillis?.let { dayEpoch = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toEpochDay() }
+                    state.selectedDateMillis?.let { onDay(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate()) }
                     showCalendar = false
                 }) { Text("Vai") }
             },
@@ -180,13 +177,13 @@ fun DiaryScreen(padding: PaddingValues, onEdit: (Meal) -> Unit, onSettings: () -
     }
 }
 
-/** Gli ultimi 14 giorni con un mini anello ciascuno. */
+/** Gli ultimi 14 giorni e i prossimi 7, con un mini anello ciascuno. */
 @Composable
 private fun DayStrip(selected: LocalDate, meals: List<Meal>, goal: Int, onSelect: (LocalDate) -> Unit) {
     val today = LocalDate.now()
-    val days = (13 downTo 0).map { today.minusDays(it.toLong()) }
+    val days = (-13L..7L).map { today.plusDays(it) }
     val state = rememberLazyListState()
-    LaunchedEffect(Unit) { state.scrollToItem(days.size - 1) }
+    LaunchedEffect(Unit) { state.scrollToItem(maxOf(0, days.indexOf(today) - 2)) }  // oggi in vista, con un paio di giorni prima
     LazyRow(state = state, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(days) { d ->
             val isSelected = d == selected

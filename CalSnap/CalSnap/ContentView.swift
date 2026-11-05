@@ -48,12 +48,12 @@ struct ContentView: View {
                     Button("Calendario", systemImage: "calendar") { showCalendar = true }
                 }
             }
-            .sheet(isPresented: $adding) { AddMealView() }
+            .sheet(isPresented: $adding) { AddMealView(on: day) }
             .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(item: $editing) { AddMealView(editing: $0) }
             .sheet(item: $draft) { AddMealView(editing: $0) }
             .sheet(isPresented: $showCalendar) {
-                DatePicker("Giorno", selection: $day, in: ...Date(), displayedComponents: .date)
+                DatePicker("Giorno", selection: $day, displayedComponents: .date)
                     .datePickerStyle(.graphical)
                     .padding()
                     .presentationDetents([.medium])
@@ -106,7 +106,7 @@ struct ContentView: View {
     }
 }
 
-/// Ultimi 14 giorni, ognuno con un mini anello di avanzamento.
+/// Ultimi 14 giorni e i prossimi 7, ognuno con un mini anello di avanzamento.
 struct DayStrip: View {
     @Binding var day: Date
     let meals: [Meal]
@@ -115,7 +115,7 @@ struct DayStrip: View {
     var body: some View {
         let cal = Calendar.current
         let today = cal.startOfDay(for: .now)
-        let days = (0..<14).reversed().map { cal.date(byAdding: .day, value: -$0, to: today)! }
+        let days = (-13...7).map { cal.date(byAdding: .day, value: $0, to: today)! }
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
@@ -144,7 +144,7 @@ struct DayStrip: View {
                 }
                 .padding(.horizontal)
             }
-            .onAppear { proxy.scrollTo(today, anchor: .trailing) }
+            .onAppear { proxy.scrollTo(today, anchor: .center) }
         }
     }
 }
@@ -187,12 +187,15 @@ struct PlanSuggestionCard: View {
 }
 
 extension Meal {
+    /// Orario di un pasto nuovo nel giorno scelto nel diario: oggi l'ora attuale, negli altri giorni mezzogiorno.
+    static func time(on day: Date) -> Date {
+        let cal = Calendar.current
+        return cal.isDateInToday(day) ? Date() : cal.date(bySettingHour: 12, minute: 0, second: 0, of: day)!
+    }
+
     /// Pasto nuovo con gli alimenti del piano: valori del piano, nessuna IA.
     static func fromPlan(_ planned: PlanMeal, on day: Date) -> Meal {
-        let cal = Calendar.current
-        // giorno scelto nel diario, orario attuale (o mezzogiorno per i giorni passati)
-        let date = cal.isDateInToday(day) ? Date() : cal.date(bySettingHour: 12, minute: 0, second: 0, of: day)!
-        var meal = Meal(date: date, name: planned.name, kcal: 0, protein: 0, carbs: 0, fat: 0)
+        var meal = Meal(date: time(on: day), name: planned.name, kcal: 0, protein: 0, carbs: 0, fat: 0)
         meal.slot = planned.name
         meal.fromPlan = true
         meal.setItems(planned.items.map(\.foodItem))

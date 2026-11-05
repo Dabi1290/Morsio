@@ -104,6 +104,14 @@ class ModelTest {
 
     /** Stesso server dell'app iOS: avvialo e passa MORSIO_SERVER, MORSIO_KEY, MORSIO_GUEST (vedi run_tests.sh). */
     @Test
+    fun pastoNuovoNelGiornoScelto() {
+        val later = LocalDate.now().plusDays(3)
+        val at = LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(mealTime(later)), ZoneId.systemDefault())
+        assertEquals(later.atTime(12, 0), at)  // giorno futuro: mezzogiorno di quel giorno
+        assertEquals(LocalDate.now(), Meal(name = "", time = mealTime(LocalDate.now())).day)
+    }
+
+    @Test
     fun uploadAndDeleteOnServer() = runBlocking {
         val server = System.getenv("MORSIO_SERVER")
         assumeTrue(server != null)

@@ -147,13 +147,16 @@ object Slot {
     fun weekdayCode(date: LocalDate) = weekdays[date.dayOfWeek.value - DayOfWeek.MONDAY.value]
 }
 
-/** Pasto del piano pronto da salvare: oggi all'ora attuale, nei giorni passati a mezzogiorno. */
-fun PlanMeal.toMeal(day: LocalDate): Meal {
+/** Orario di un pasto nuovo nel giorno scelto: oggi l'ora attuale, negli altri giorni mezzogiorno. */
+fun mealTime(day: LocalDate): Long {
     val now = LocalDateTime.now()
     val at = if (day == now.toLocalDate()) now else day.atTime(12, 0)
-    return Meal(name = name, time = at.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), slot = name, fromPlan = true)
-        .withItems(items.map { it.toFoodItem() })
+    return at.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 }
+
+/** Pasto del piano pronto da salvare nel giorno scelto. */
+fun PlanMeal.toMeal(day: LocalDate): Meal =
+    Meal(name = name, time = mealTime(day), slot = name, fromPlan = true).withItems(items.map { it.toFoodItem() })
 
 /** Pasti già analizzati, il più recente per nome. */
 fun pastMeals(meals: List<Meal>, query: String): List<Meal> {

@@ -24,13 +24,14 @@ struct AddMealView: View {
     @State private var busy = false
     @State private var error: String?
 
-    init(editing meal: Meal? = nil) {
+    /// [day]: per un pasto nuovo, il giorno aperto nel diario (anche futuro).
+    init(editing meal: Meal? = nil, on day: Date = Date()) {
         editing = meal
-        _date = State(initialValue: meal?.date ?? Date())
+        _date = State(initialValue: meal?.date ?? Meal.time(on: day))
         _values = State(initialValue: Nutrition(name: meal?.name ?? "", kcal: Double(meal?.kcal ?? 0),
                                                 protein: meal?.protein ?? 0, carbs: meal?.carbs ?? 0, fat: meal?.fat ?? 0))
         _items = State(initialValue: meal?.items ?? [])
-        _slot = State(initialValue: meal?.resolvedSlot ?? Slot.forTime(Date()))
+        _slot = State(initialValue: meal?.resolvedSlot ?? Slot.forTime(Meal.time(on: day)))
         _fromPlan = State(initialValue: meal?.fromPlan ?? false)
         // piano senza valori: la descrizione è già pronta se si vuole far calcolare l'IA
         if let meal, meal.fromPlan == true, meal.kcal == 0, let items = meal.items {
