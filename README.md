@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🥗 Morsio
+<img src="docs/logo.png" alt="Logo di Morsio" width="128" height="128">
+
+# Morsio
 
 **Fotografi il piatto, Morsio conta le calorie.**
 
@@ -14,6 +16,18 @@ tu correggi quello che serve, e un tuo server privato mostra i pasti a chi ti se
 ![Licenza](https://img.shields.io/badge/licenza-PolyForm%20Noncommercial-orange)
 
 </div>
+
+<!--
+Screenshot: metti i PNG in docs/screenshots/ con questi nomi, poi cancella
+le due righe che aprono e chiudono questo commento.
+
+<div align="center">
+  <img src="docs/screenshots/diario.png" alt="Diario" width="220">
+  <img src="docs/screenshots/pasto.png" alt="Analisi di un pasto" width="220">
+  <img src="docs/screenshots/piano.png" alt="Piano dieta" width="220">
+  <img src="docs/screenshots/widget.png" alt="Widget" width="220">
+</div>
+-->
 
 ---
 
