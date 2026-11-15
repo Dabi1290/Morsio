@@ -54,9 +54,8 @@ class ModelTest {
 
     @Test
     fun importRealDietJSON() {
-        // lo stesso file importato dall'app iOS
-        val file = File("../../dieta_settimanale_kcal.json")
-        assumeTrue(file.exists())
+        // il piano d'esempio del repository, lo stesso usato dai test iOS
+        val file = File("../../esempio_piano.json")
         val plan = json.decodeFromString<DietPlan>(file.readText())
         assertEquals(7, plan.days.size)
         val monday = plan.day("Lun")!!

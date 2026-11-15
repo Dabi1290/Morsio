@@ -175,11 +175,11 @@ final class CalSnapTests: XCTestCase {
 
     // MARK: - Piano
 
-    /// Il JSON vero della dieta (quello di Diet1), letto dalla cartella del progetto.
+    /// Il piano d'esempio del repository, letto dalla cartella del progetto.
     private func realPlanData() throws -> Data {
         let url = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("dieta_settimanale.json")
+            .appendingPathComponent("esempio_piano.json")
         return try Data(contentsOf: url)
     }
 

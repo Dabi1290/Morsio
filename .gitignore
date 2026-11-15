@@ -15,3 +15,6 @@ local.properties
 *.iml
 .idea/
 .kotlin/
+
+# piani dieta personali: restano solo in locale
+dieta_*.json
