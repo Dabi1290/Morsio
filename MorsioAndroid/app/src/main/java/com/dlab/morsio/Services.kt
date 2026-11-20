@@ -61,6 +61,10 @@ object Gemini {
         "e calorie e macronutrienti riferiti a quel peso. Dai al pasto un nome breve in italiano; " +
         "anche i nomi degli alimenti in italiano."
 
+    /** Per i provider senza schema: il formato va scritto nel prompt. */
+    const val JSON_PROMPT = PROMPT + " Rispondi solo con un oggetto JSON così: " +
+        "{\"name\": \"...\", \"items\": [{\"name\": \"...\", \"grams\": 0, \"kcal\": 0, \"protein\": 0, \"carbs\": 0, \"fat\": 0}]}"
+
     private val schema = buildJsonObject {
         put("type", "object")
         putJsonObject("properties") {
@@ -133,9 +137,74 @@ object Gemini {
         val text = json.decodeFromString<Steps>(body).steps.firstOrNull { it.type == "model_output" }
             ?.content?.firstOrNull { it.type == "text" }?.text
             ?: throw AppError("Gemini non ha restituito una stima")
+        return mealFromJson(text)
+    }
+
+    /** Il JSON del pasto, uguale per tutti i provider. */
+    fun mealFromJson(text: String): AIMeal {
         val raw = json.decodeFromString<Raw>(text)
         if (raw.items.isEmpty()) throw AppError("L'IA non ha riconosciuto alimenti")
         return AIMeal(raw.name, raw.items.map { FoodItem.fromTotals(it.name, it.grams, it.kcal, it.protein, it.carbs, it.fat) })
+    }
+}
+
+/** Groq, API compatibile OpenAI. Piano gratuito su console.groq.com. */
+object Groq {
+    const val DEFAULT_MODEL = "qwen/qwen3.8-27b"
+
+    suspend fun analyze(key: String, model: String, photo: ByteArray?, note: String): AIMeal = withContext(Dispatchers.IO) {
+        val body = buildJsonObject {
+            put("model", model.ifBlank { DEFAULT_MODEL })
+            putJsonArray("messages") {
+                addJsonObject {
+                    put("role", "user")
+                    putJsonArray("content") {
+                        addJsonObject {
+                            put("type", "text")
+                            put("text", Gemini.JSON_PROMPT + if (note.isEmpty()) "" else "\nDescrizione: $note")
+                        }
+                        if (photo != null) addJsonObject {
+                            put("type", "image_url")
+                            putJsonObject("image_url") { put("url", "data:image/jpeg;base64," + Base64.encodeToString(photo, Base64.NO_WRAP)) }
+                        }
+                    }
+                }
+            }
+            putJsonObject("response_format") { put("type", "json_object") }
+        }
+        val r = http("https://api.groq.com/openai/v1/chat/completions", "POST", mapOf(
+            "Authorization" to "Bearer $key",
+            "Content-Type" to "application/json",
+        ), body.toString().toByteArray())
+        if (r.status != 200) {
+            val message = runCatching {
+                json.parseToJsonElement(r.body).jsonObject["error"]!!.jsonObject["message"]!!.jsonPrimitive.contentOrNull
+            }.getOrNull()
+            throw AppError("Groq (${r.status}): ${message ?: "errore sconosciuto"}")
+        }
+        parse(r.body)
+    }
+
+    @Serializable private data class Message(val content: String? = null)
+    @Serializable private data class Choice(val message: Message)
+    @Serializable private data class Completion(val choices: List<Choice>)
+
+    fun parse(body: String): AIMeal {
+        val text = json.decodeFromString<Completion>(body).choices.firstOrNull()?.message?.content
+            ?: throw AppError("Groq non ha restituito una stima")
+        return Gemini.mealFromJson(text)
+    }
+}
+
+/** Con la chiave Groq si prova prima Groq (veloce, raramente saturo), poi Gemini. */
+suspend fun analyzeMeal(storage: Storage, photo: ByteArray?, note: String): AIMeal {
+    val gemini = suspend { Gemini.analyze(storage.string("geminiKey"), storage.string("geminiModel"), photo, note) }
+    val groqKey = storage.string("groqKey")
+    if (groqKey.isBlank()) return gemini()
+    return try {
+        Groq.analyze(groqKey, storage.string("groqModel"), photo, note)
+    } catch (groqError: Exception) {
+        try { gemini() } catch (e: Exception) { throw AppError("${groqError.message}\n${e.message}") }
     }
 }
 

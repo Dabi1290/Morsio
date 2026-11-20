@@ -91,6 +91,8 @@ Ogni ora il server cancella da solo le foto più vecchie di 7 giorni.
 
 Il modello predefinito è `gemini-flash-latest`; se è sovraccarico, l'app passa da sola a Flash-Lite.
 
+**Facoltativo, Groq (gratuito):** Gemini è spesso saturo. Crea una chiave su [console.groq.com](https://console.groq.com) (**API Keys › Create API Key**) e incollala in **Groq › Chiave API**: l'app userà prima Groq (modello `qwen/qwen3.8-27b`) e Gemini resterà di riserva.
+
 ### 3. App iOS
 
 Serve un Mac con **Xcode 26** e **xcodegen** (`brew install xcodegen`).
@@ -131,6 +133,7 @@ Le impostazioni sono uguali su iOS e Android e si aprono dall'icona ⚙️ in al
 | Obiettivo giornaliero | Le tue kcal al giorno |
 | Promemoria | I pasti da ricordare e l'orario. Se il pasto è già nel diario, quel giorno la notifica non arriva |
 | Gemini › Chiave API | La chiave del punto 2 |
+| Groq › Chiave API | Facoltativa: se c'è, l'IA usa prima Groq |
 | Server foto › Indirizzo | `https://tuo-dominio` (in casa va bene anche `http://IP-DEL-SERVER:8080`) |
 | Server foto › Chiave upload | La chiave stampata da `setup.sh` |
 

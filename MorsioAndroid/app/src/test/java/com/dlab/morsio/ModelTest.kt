@@ -42,6 +42,15 @@ class ModelTest {
     }
 
     @Test
+    fun groqParse() {
+        val text = """{"name":"Mela","items":[{"name":"Mela","grams":150,"kcal":78,"protein":0.4,"carbs":21,"fat":0.3}]}"""
+        val body = """{"choices":[{"index":0,"message":{"role":"assistant","content":${kotlinx.serialization.json.JsonPrimitive(text)}}}]}"""
+        val ai = Groq.parse(body)
+        assertEquals("Mela", ai.name)
+        assertEquals(78.0, ai.items[0].kcal, 0.01)
+    }
+
+    @Test
     fun planItemUsesFirstAlternativeAndItsGrams() {
         val item = PlanItem("1", "Riso 70 g crudo oppure pasta 80 g", kcal = 245.0, protein = 4.9, carbs = 54.6, fat = 0.4)
         assertEquals(listOf("Riso 70 g crudo", "pasta 80 g"), item.alternatives)

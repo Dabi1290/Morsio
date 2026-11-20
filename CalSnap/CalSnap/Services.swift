@@ -28,6 +28,12 @@ enum Gemini {
     anche i nomi degli alimenti in italiano.
     """
 
+    /// Per i provider senza schema: il formato va scritto nel prompt.
+    static let jsonPrompt = prompt + """
+     Rispondi solo con un oggetto JSON così: \
+    {"name": "...", "items": [{"name": "...", "grams": 0, "kcal": 0, "protein": 0, "carbs": 0, "fat": 0}]}
+    """
+
     private static let schema: [String: Any] = [
         "type": "object",
         "properties": [
@@ -50,7 +56,18 @@ enum Gemini {
     /// Se il modello scelto è sovraccarico (503) o fuori quota (429) si passa a Flash-Lite.
     private static let fallbackModel = "gemini-flash-lite-latest"
 
+    /// Con la chiave Groq si prova prima Groq (veloce, raramente saturo), poi Gemini.
     static func analyze(photo: Data?, note: String) async throws -> AIMeal {
+        let groqKey = SharedStorage.defaults.string(forKey: "groqKey") ?? ""
+        guard !groqKey.isEmpty else { return try await gemini(photo: photo, note: note) }
+        do { return try await Groq.analyze(key: groqKey, photo: photo, note: note) } catch let groqError {
+            do { return try await gemini(photo: photo, note: note) } catch {
+                throw AppError("\(groqError.localizedDescription)\n\(error.localizedDescription)")
+            }
+        }
+    }
+
+    private static func gemini(photo: Data?, note: String) async throws -> AIMeal {
         let d = SharedStorage.defaults
         guard let key = d.string(forKey: "geminiKey"), !key.isEmpty else {
             throw AppError("Inserisci la chiave Gemini nelle impostazioni")
@@ -102,6 +119,11 @@ enum Gemini {
         guard let text = steps.first(where: { $0.type == "model_output" })?.content?.first(where: { $0.type == "text" })?.text else {
             throw AppError("Gemini non ha restituito una stima")
         }
+        return try meal(fromJSON: text)
+    }
+
+    /// Il JSON del pasto, uguale per tutti i provider.
+    static func meal(fromJSON text: String) throws -> AIMeal {
         struct Raw: Decodable {
             struct Item: Decodable { let name: String; let grams, kcal, protein, carbs, fat: Double }
             let name: String
@@ -112,6 +134,50 @@ enum Gemini {
         return AIMeal(name: raw.name, items: raw.items.map {
             FoodItem(name: $0.name, grams: $0.grams, kcal: $0.kcal, protein: $0.protein, carbs: $0.carbs, fat: $0.fat)
         })
+    }
+}
+
+/// Groq, API compatibile OpenAI. Piano gratuito su console.groq.com.
+enum Groq {
+    static let defaultModel = "qwen/qwen3.8-27b"
+
+    static func analyze(key: String, photo: Data?, note: String) async throws -> AIMeal {
+        let d = SharedStorage.defaults
+        let model = d.string(forKey: "groqModel").flatMap { $0.isEmpty ? nil : $0 } ?? defaultModel
+        var content: [[String: Any]] = [["type": "text", "text": Gemini.jsonPrompt + (note.isEmpty ? "" : "\nDescrizione: \(note)")]]
+        if let photo {
+            content.append(["type": "image_url", "image_url": ["url": "data:image/jpeg;base64,\(photo.base64EncodedString())"]])
+        }
+        let body: [String: Any] = [
+            "model": model,
+            "messages": [["role": "user", "content": content]],
+            "response_format": ["type": "json_object"],
+        ]
+        var req = URLRequest(url: URL(string: "https://api.groq.com/openai/v1/chat/completions")!)
+        req.httpMethod = "POST"
+        req.timeoutInterval = 60
+        req.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
+        guard status == 200 else {
+            struct ErrorBody: Decodable { struct E: Decodable { let message: String? }; let error: E }
+            let message = (try? JSONDecoder().decode(ErrorBody.self, from: data))?.error.message
+            throw AppError("Groq (\(status)): \(message ?? "errore sconosciuto")")
+        }
+        return try parse(data)
+    }
+
+    static func parse(_ data: Data) throws -> AIMeal {
+        struct Response: Decodable {
+            struct Choice: Decodable { struct M: Decodable { let content: String? }; let message: M }
+            let choices: [Choice]
+        }
+        guard let text = try JSONDecoder().decode(Response.self, from: data).choices.first?.message.content else {
+            throw AppError("Groq non ha restituito una stima")
+        }
+        return try Gemini.meal(fromJSON: text)
     }
 }
 

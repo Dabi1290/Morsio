@@ -267,6 +267,13 @@ final class CalSnapTests: XCTestCase {
         XCTAssertEqual(ai.items[1].kcal, 40, accuracy: 0.001)
     }
 
+    func testGroqParse() throws {
+        let json = #"{"choices":[{"index":0,"message":{"role":"assistant","content":"{\"name\":\"Mela\",\"items\":[{\"name\":\"Mela\",\"grams\":150,\"kcal\":78,\"protein\":0.4,\"carbs\":21,\"fat\":0.3}]}"}}]}"#
+        let ai = try Groq.parse(Data(json.utf8))
+        XCTAssertEqual(ai.name, "Mela")
+        XCTAssertEqual(ai.items[0].kcal, 78, accuracy: 0.001)
+    }
+
     func testChangingGramsRecomputes() {
         var pasta = FoodItem(name: "Spaghetti", grams: 100, kcal: 360, protein: 12, carbs: 72, fat: 1.5)
         let sugo = FoodItem(name: "Sugo", grams: 80, kcal: 40, protein: 1, carbs: 6, fat: 1)

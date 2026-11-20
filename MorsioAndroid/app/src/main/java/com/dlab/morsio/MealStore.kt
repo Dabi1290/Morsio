@@ -83,7 +83,7 @@ class MealStore(private val context: Context) {
             val aiFile = storage.aiPhotoFile(id)
             val photo = aiFile.takeIf { it.exists() }?.readBytes()
             val result = runCatching {
-                Gemini.analyze(storage.string("geminiKey"), storage.string("geminiModel"), photo, note)
+                analyzeMeal(storage, photo, note)
             }
             analyzing.remove(id)
             // pasto cancellato o modificato a mano nel frattempo: vince l'utente

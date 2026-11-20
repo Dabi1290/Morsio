@@ -7,6 +7,8 @@ struct SettingsView: View {
     @AppStorage("theme", store: SharedStorage.defaults) var theme = "system"
     @AppStorage("geminiKey", store: SharedStorage.defaults) var geminiKey = ""
     @AppStorage("geminiModel", store: SharedStorage.defaults) var geminiModel = "gemini-flash-latest"
+    @AppStorage("groqKey", store: SharedStorage.defaults) var groqKey = ""
+    @AppStorage("groqModel", store: SharedStorage.defaults) var groqModel = Groq.defaultModel
     @AppStorage("serverURL", store: SharedStorage.defaults) var serverURL = ""
     @AppStorage("uploadKey", store: SharedStorage.defaults) var uploadKey = ""
     @State private var notificationsDenied = false
@@ -49,6 +51,20 @@ struct SettingsView: View {
                     Text("Gemini")
                 } footer: {
                     Text("Chiave gratuita da aistudio.google.com. Se il modello è sovraccarico si passa da soli a Flash-Lite.")
+                }
+                Section {
+                    LabeledContent("Chiave API") {
+                        SecureField("Incolla la chiave", text: $groqKey).multilineTextAlignment(.trailing).frame(maxWidth: 170)
+                    }
+                    LabeledContent("Modello") {
+                        TextField(Groq.defaultModel, text: $groqModel)
+                            .multilineTextAlignment(.trailing)
+                            .autocorrectionDisabled().textInputAutocapitalization(.never)
+                    }
+                } header: {
+                    Text("Groq")
+                } footer: {
+                    Text("Chiave gratuita da console.groq.com. Se c'è, si usa prima Groq e Gemini resta di riserva.")
                 }
                 Section {
                     LabeledContent("Indirizzo") {

@@ -61,6 +61,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.dlab.morsio.Groq
 import com.dlab.morsio.MorsioWidget
 import com.dlab.morsio.Reminders
 import com.dlab.morsio.Slot
@@ -143,6 +144,16 @@ fun SettingsScreen(theme: String, onTheme: (String) -> Unit, onClose: () -> Unit
                         }
                     }
                     Footer("Chiave gratuita da aistudio.google.com. Se il modello è sovraccarico si passa da soli a Flash-Lite.")
+                }
+                item {
+                    SectionLabel("Groq")
+                    MorsioCard(padding = 12.dp) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            PrefField("Chiave API", "groqKey", "Incolla la chiave", secret = true)
+                            PrefField("Modello", "groqModel", Groq.DEFAULT_MODEL)
+                        }
+                    }
+                    Footer("Chiave gratuita da console.groq.com. Se c'è, si usa prima Groq e Gemini resta di riserva.")
                 }
                 item {
                     SectionLabel("Server foto")
